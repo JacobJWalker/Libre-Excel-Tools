@@ -11,7 +11,7 @@
 '
 ' It requires adding Microsoft Forms 2.0 in References if it isn't already there
 
-' The coding of this macro was helped bu a code example from ExtendOffice / Kutools for Excel
+' The coding of this macro was helped by a code example from ExtendOffice / Kutools for Excel
 ' https://www.extendoffice.com/documents/excel/3165-how-to-import-csv-file-into-worksheet.html
 
 ' Code for Preserving All Original CSV Values, by having them imported as Text, found at
