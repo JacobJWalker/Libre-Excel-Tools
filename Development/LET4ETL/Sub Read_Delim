@@ -1,0 +1,93 @@
+
+' This macro imports a Delimited Text File, such as a CSV into the current worksheet to the current active cell or selection
+'
+' Note: This macro imports all data as Text, to ensure that no data is accidentally corrupted
+'       by Excel trying to change a data type.  As such you must use formulas like =Value()
+'       to change cells to numbers or dates.
+'
+'
+' This macro is part of the Libre Excel Tools for ETL (LET4ETL)
+' Released under the LGPL 3.0
+'
+' It requires adding Microsoft Forms 2.0 in References if it isn't already there
+
+' The coding of this macro was helped bu a code example from ExtendOffice / Kutools for Excel
+' https://www.extendoffice.com/documents/excel/3165-how-to-import-csv-file-into-worksheet.html
+
+' Code for Preserving All Original CSV Values, by having them imported as Text, found at
+' https://stackoverflow.com/questions/48868467/importing-csv-as-text-excel-vba
+
+' Example of code to help preserve the clipboard can be found at
+' https://stackoverflow.com/questions/13327286/retaining-clipboard-content-during-code-execution
+
+  Dim CSVFileName As Variant
+  Dim OriginalClipboard As New MSForms.DataObject
+  Dim OriginalWB As Workbook, TempWB As Workbook
+  Dim OriginalWS As Worksheet
+  Dim OriginalRng As Range
+  Dim ColumnDataTypeArray(1 To 16384) As Variant
+  
+  ' Sets Variable to Remember Current Info, to return here later
+  Set OriginalWB = ActiveWorkbook
+  Set OriginalWS = ActiveSheet
+  Set OriginalRng = Selection
+  
+  ' Gets the filename of CSV
+  CSVFileName = Application.GetOpenFilename("CSV File (*.csv), *.csv", , "Import CSV to Current Worksheet", , False)
+  If CSVFileName = False Then Exit Sub
+  On Error Resume Next
+  
+  Application.ScreenUpdating = False
+  
+  'Set all Potential Columns to Text
+  For Count = 1 To 16384
+    ColumnDataTypeArray(Count) = xlTextFormat
+  Next Count
+  
+  'Imports the CSV to Temporary Workbook
+  Set TempWB = Application.Workbooks.Add(1)
+  With ActiveSheet.QueryTables.Add("TEXT;" & CSVFileName, TempWB.Sheets(1).Range("A1"))
+      .FieldNames = True
+      .RowNumbers = False
+      .FillAdjacentFormulas = False
+      .PreserveFormatting = True
+      .RefreshOnFileOpen = False
+      .RefreshStyle = xlInsertDeleteCells
+      .SavePassword = False
+      .SaveData = True
+      .RefreshPeriod = 0
+      .TextFileColumnDataTypes = ColumnDataTypeArray
+      .TextFilePromptOnRefresh = False
+      .TextFilePlatform = 936
+      .TextFileStartRow = 1
+      .TextFileParseType = xlDelimited
+      .TextFileTextQualifier = xlTextQualifierDoubleQuote
+      .TextFileConsecutiveDelimiter = False
+      .TextFileTabDelimiter = True
+      .TextFileSemicolonDelimiter = False
+      .TextFileCommaDelimiter = True
+      .TextFileSpaceDelimiter = False
+      .TextFileTrailingMinusNumbers = True
+      .Refresh BackgroundQuery:=False
+  End With
+   
+  'Copy Data from Temporary Workbook back to Original, where the Selection previously was
+  TempWB.ActiveSheet.UsedRange.Copy
+  OriginalWB.Activate
+  OriginalWS.Select
+  OriginalRng.Select
+  
+  With ActiveCell
+    .PasteSpecial xlPasteValues
+    .PasteSpecial xlPasteFormats
+  End With
+  
+  ' Close the Temporary Workbook
+  Application.DisplayAlerts = False
+  TempWB.Close SaveChanges:=False
+  Application.DisplayAlerts = True
+  
+  'Clean Up
+  Application.ScreenUpdating = True
+  
+End Sub
